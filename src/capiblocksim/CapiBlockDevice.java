@@ -15,8 +15,7 @@ public class CapiBlockDevice {
 	}
 
 	public Chunk openChunk(String s) throws IOException {
-		f = new RandomAccessFile(s, "rw");
-		System.err.println(s);
+		f = new RandomAccessFile(s, "rws");
 		f.setLength(1024 * 1024 * 1024 * 4);
 		inChannel = f.getChannel();
 		return new Chunk(inChannel);

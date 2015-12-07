@@ -12,7 +12,6 @@ public class Chunk {
 	}
 
 	public void writeBlock(long start, long blocks, ByteBuffer buf) throws IOException {
-		System.err.println(start+" "+ blocks+" "+buf.capacity());
 		byte[] arr = new byte[(int) (blocks * 4096)];
 		buf.rewind();
 		buf.get(arr, 0,(int) blocks * 4096);
@@ -26,7 +25,9 @@ public class Chunk {
 		ByteBuffer b = ByteBuffer.allocate((int) (blocks * 4096));
 		inChannel.position(start * 4096);
 		inChannel.read(b);
-		buf = b;
+		b.rewind();
+		buf.put(b);
+		buf.position(b.position()-(int) (blocks * 4096));
 	}
 	public void close() throws IOException{
 		inChannel.close();
