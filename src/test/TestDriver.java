@@ -5,8 +5,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Random;
 
-import capiblocksim.CapiBlockDevice;
-import capiblocksim.Chunk;
+import com.ibm.research.capiblock.CapiBlockDevice;
+import com.ibm.research.capiblock.Chunk;
 
 public class TestDriver {
 
@@ -14,8 +14,21 @@ public class TestDriver {
 		// open a device
 		CapiBlockDevice dev = CapiBlockDevice.getInstance();
 		try {
+
+			if (args.length > 0 && args[0].equals("print")) {
+				Chunk ch = dev.openChunk("/tmp/clog.txt");
+				// read 128 blocks
+				for (long i = 0; i < 128; i++) {
+					ByteBuffer f = ByteBuffer.allocate(4096);
+					ch.readBlock(i, 1, f);
+					f.rewind();
+					System.out.println(f.getLong());
+				}
+				System.exit(0);
+			}
+
 			// test nonexistant file
-			Chunk emptychunk = dev.openChunk("null.txt");
+			Chunk emptychunk = dev.openChunk("/tmp/null.txt");
 			// read 512 blocks
 			for (long i = 0; i < 512; i++) {
 				ByteBuffer f = ByteBuffer.allocate(4096);
@@ -24,7 +37,7 @@ public class TestDriver {
 			}
 
 			ArrayList<Long> times = new ArrayList<Long>();
-			Chunk chunk = dev.openChunk("file.txt");
+			Chunk chunk = dev.openChunk("/tmp/file.txt");
 			// write 128 longs
 			for (long i = 0; i < 128; i++) {
 				ByteBuffer f = ByteBuffer.allocate(4096);
@@ -60,10 +73,8 @@ public class TestDriver {
 			assert f2.equals(f);
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
