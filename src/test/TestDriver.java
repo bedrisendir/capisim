@@ -36,51 +36,51 @@ public class TestDriver {
 	private static void runTests(CapiBlockDevice dev, String device, int chunkid)
 			throws IOException, InterruptedException, ExecutionException {
 		// 1 block sync - unique op
-		assert (testWrite(dev, chunkid, true, null, 1000, device) == true) : "Test 1.1: FAIL";
-		assert (testRead(dev, chunkid, true, null, 1000, device) == true) : "Test 1.2: FAIL";
+		assert (testWrite(dev, chunkid, true, null, totalOps, device) == true) : "Test 1.1: FAIL";
+		assert (testRead(dev, chunkid, true, null, totalOps, device) == true) : "Test 1.2: FAIL";
 
 		// 1 block async - unique op
-		assert (testWrite(dev, chunkid, false, null, 1000, device) == true) : "Test 2.1: FAIL";
-		assert (testRead(dev, chunkid, false, null, 1, device) == true) : "Test 2.2: FAIL";
+		assert (testWrite(dev, chunkid, false, null, totalOps, device) == true) : "Test 2.1: FAIL";
+		assert (testRead(dev, chunkid, false, null, totalOps, device) == true) : "Test 2.2: FAIL";
 
 		// 1 block sync - unique op
 		ByteBuffer buffer = null;
-		buffer = initBuffer(1024, 1);
+		buffer = initRandomBuffer(1024, 1);
 		assert (testWrite(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 1.1: FAIL";
 		assert (testRead(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 1.2: FAIL";
 
 		// 1 block async - unique op
-		buffer = initBuffer(1024, 1);
+		buffer = initRandomBuffer(1024, 1);
 		assert (testWrite(dev, chunkid, false, buffer, totalOps, device) == true) : "Test 2.1: FAIL";
 		assert (testRead(dev, chunkid, false, buffer, totalOps, device) == true) : "Test 2.2: FAIL";
 
 		// 1 block sync - custom buffer - 1024 bytes
-		buffer = initBuffer(4096, 1);
+		buffer = initRandomBuffer(4096, 1);
 		assert (testWrite(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 3.1: FAIL";
 		assert (testRead(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 3.2: FAIL";
 
 		// 1 block sync - custom buffer - 1024 bytes
-		buffer = initBuffer(4096, 1);
-		assert (testWrite(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 4.1: FAIL";
-		assert (testRead(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 4.2: FAIL";
+		buffer = initRandomBuffer(4096, 1);
+		assert (testWrite(dev, chunkid, false, buffer, totalOps, device) == true) : "Test 4.1: FAIL";
+		assert (testRead(dev, chunkid, false, buffer, totalOps, device) == true) : "Test 4.2: FAIL";
 
-		buffer = initBuffer(5000, 2);
+		buffer = initRandomBuffer(5000, 2);
 		assert (testWrite(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 5.1: FAIL";
 		assert (testRead(dev, chunkid, true, buffer, 1, device) == true) : "Test 5.2: FAIL";
 
-		buffer = initBuffer(5000, 2);
-		assert (testWrite(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 6.1: FAIL";
-		assert (testRead(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 6.2: FAIL";
+		buffer = initRandomBuffer(5000, 2);
+		assert (testWrite(dev, chunkid, false, buffer, totalOps, device) == true) : "Test 6.1: FAIL";
+		assert (testRead(dev, chunkid, false, buffer, totalOps, device) == true) : "Test 6.2: FAIL";
 
 		// 2 block sync
-		buffer = initBuffer(8192, 2);
+		buffer = initRandomBuffer(8192, 2);
 		assert (testWrite(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 7.1: FAIL";
 		assert (testRead(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 7.2: FAIL";
 
 		// 2 block async
-		buffer = initBuffer(8192, 2);
-		assert (testWrite(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 8.1: FAIL";
-		assert (testRead(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 8.2: FAIL";
+		buffer = initRandomBuffer(8192, 2);
+		assert (testWrite(dev, chunkid, false, buffer, totalOps, device) == true) : "Test 8.1: FAIL";
+		assert (testRead(dev, chunkid, false, buffer, totalOps, device) == true) : "Test 8.2: FAIL";
 	}
 
 	/**
@@ -167,7 +167,7 @@ public class TestDriver {
 		return true;
 	};
 
-	private static ByteBuffer initBuffer(int size, int blocks) {
+	private static ByteBuffer initRandomBuffer(int size, int blocks) {
 		ByteBuffer buffer = ByteBuffer.allocateDirect(blocks * CapiBlockDevice.BLOCK_SIZE);
 		byte[] b = new byte[size];
 		new Random().nextBytes(b);
