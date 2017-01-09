@@ -1,47 +1,45 @@
 package com.ibm.research.capiblock;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class CapiBlockDevice {
-	RandomAccessFile f;
-	static CapiBlockDevice dev = new CapiBlockDevice();
+	private static final Integer capacity = Integer.valueOf(System.getProperty("capi.capacity.blocks"));
+	// TODO HASHMAP HERE WITH DEVICE
+	private static final AtomicInteger chunk_id = new AtomicInteger(0);
+	private static CapiBlockDevice instance;
+	public static final int BLOCK_SIZE = 4096;
 
 	public static CapiBlockDevice getInstance() {
-		return dev;
+		if (instance == null) {
+			instance = new CapiBlockDevice();
+				if(capacity==null){
+					System.err.println("Please define capi.capacity.blocks env variable");
+					System.exit(0);
+				}
+		}
+		return instance;
 	}
 
-	public synchronized Chunk openChunk(String s) throws IOException {
+	public Chunk openChunk(final String path) throws IOException {
+		return openChunk(path, 0);
+	}
+
+	@SuppressWarnings("resource")
+	public synchronized Chunk openChunk(String s, int maxRequests) throws IOException {
+		RandomAccessFile f;
 		boolean flag = false;
 		if (!new File(s).exists()) {
 			flag = true;
 		}
 		f = new RandomAccessFile(s, "rws");
 		if (flag) {
-			f.setLength(1024 * 1024 * 1024 * 4);
+			f.setLength(BLOCK_SIZE * capacity);
 		}
-		Chunk retval = new Chunk(f.getChannel());
-		if (flag) {
-			init(retval);
-		}
+		Chunk retval = new Chunk(instance, chunk_id.getAndIncrement(), f.getChannel());
+		//System.out.println("[CAPISIM = ]"+capacity);
 		return retval;
-	}
-
-	// initialize few blocks from start to zero
-	private void init(Chunk ch) {
-		//zeroes first 1024 block if number of bookkeeping segments bigger than 1024 need to explicitly zero the blocks
-		for (int i = 0; i < 1024; i++) {
-			ByteBuffer b = ByteBuffer.allocate(4096);
-			b.putLong(0);
-			try {
-				ch.writeBlock(i, 1, b);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
 	}
 }

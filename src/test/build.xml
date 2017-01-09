@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="compile" name="capisim">
+<property environment="env"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.8"/>
+    <property name="source" value="1.8"/>
+    <path id="capisimtest.classpath">
+        <pathelement location="../../capiblock.jar"/>
+    	<pathelement location="bin"/>
+    </path>
+	<target name="compile">
+        <delete dir="bin"/>
+		<mkdir dir="bin"/>
+		<javac debug="true" debuglevel="${debuglevel}" srcdir="." destdir="bin" includeantruntime="false" source="${source}" target="${target}">
+            <classpath refid="capisimtest.classpath"/>
+        </javac>
+    </target>
+	
+	<!-- number of blocks to use while running the test. -->
+    <target depends="compile" name="sim">
+        <java classname="test.TestDriver" failonerror="true" fork="yes">
+        	<sysproperty key="capi.test.devices" value="/dev/shm/test.txt"/>
+        	<sysproperty key="capi.capacity.blocks" value="1000"/> 	<!-- number of blocks to use while running the test. -->
+            <jvmarg line="-ea"/>
+            <classpath refid="capisimtest.classpath"/>
+        </java>
+    </target>
+	
+	<!-- number of blocks to use while running the test. -->
+    <target depends="compile" name="capi">
+        <java classname="test.TestDriver" failonerror="true" fork="yes">
+        	<sysproperty key="java.library.path" path="/home/bsendir/lib/capiblock/build/jni"/>
+        	<sysproperty key="capi.test.devices" value="/dev/sg0"/>
+        	<sysproperty key="capi.capacity.blocks" value="1000"/> 	<!-- number of blocks to use while running the test. -->
+            <jvmarg line="-ea"/>
+            <classpath refid="capisimtest.classpath"/>
+        </java>
+    </target>
+</project>
