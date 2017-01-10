@@ -1,4 +1,4 @@
-capisim implements same method signatures and mimics the behavior of original capiblock API. So, no code changes needed to use it. 
+capisim implements same method signatures and mimics the behavior of original capiblock API. 
 
 ### Steps to build Cassandra with capisim.
 1. clone bedrisendir/cassandra/aug1-capiflashcommitlog
