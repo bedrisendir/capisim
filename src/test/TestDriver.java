@@ -17,16 +17,34 @@ public class TestDriver {
 
 	public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
 
+		/*Test getSize() and close()*/
 		for (String device : devices) {
 			CapiBlockDevice dev = CapiBlockDevice.getInstance();
 			Chunk testChunk = dev.openChunk(device);
 			System.out.println("capi devices:" + device + " - number of blocks:" + testChunk.getSize());
 			testChunk.close();
 		}
+		
+		/*Simple write/read*/
+		CapiBlockDevice dev = CapiBlockDevice.getInstance();
+		Chunk testChunk = dev.openChunk(devices[0]);
+		ByteBuffer outBuf = ByteBuffer.allocateDirect(CapiBlockDevice.BLOCK_SIZE);
+		ByteBuffer inBuf = ByteBuffer.allocateDirect(CapiBlockDevice.BLOCK_SIZE);
+		outBuf.putInt(55);
+		outBuf.rewind();
+		testChunk.writeBlock(10, 1,outBuf);
+		testChunk.readBlock(10, 1, inBuf);
+		outBuf.position(4096);
+		inBuf.position(4096);
+		outBuf.flip();
+		inBuf.flip();
+		System.out.println("Simple Test= Wrote:"+outBuf.getInt()+" Read:"+inBuf.getInt());
+		compare(inBuf,outBuf);
 
+		
+		/*Run stress tests*/
 		for (String device : devices) {
 			for (int chunkid : chunks) {
-				CapiBlockDevice dev = CapiBlockDevice.getInstance();
 				System.out.println("runnning " + device + " " + chunkid);
 				runTests(dev, device, chunkid);
 			}
@@ -43,44 +61,48 @@ public class TestDriver {
 		assert (testWrite(dev, chunkid, false, null, totalOps, device) == true) : "Test 2.1: FAIL";
 		assert (testRead(dev, chunkid, false, null, totalOps, device) == true) : "Test 2.2: FAIL";
 
-		// 1 block sync - unique op
+		// 1 block - 1024 bytes sync
 		ByteBuffer buffer = null;
 		buffer = initRandomBuffer(1024, 1);
 		assert (testWrite(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 1.1: FAIL";
 		assert (testRead(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 1.2: FAIL";
 
-		// 1 block async - unique op
+		// 1 block - 1024 bytes async
 		buffer = initRandomBuffer(1024, 1);
 		assert (testWrite(dev, chunkid, false, buffer, totalOps, device) == true) : "Test 2.1: FAIL";
 		assert (testRead(dev, chunkid, false, buffer, totalOps, device) == true) : "Test 2.2: FAIL";
 
-		// 1 block sync - custom buffer - 1024 bytes
+		// 1 full block - sync 
 		buffer = initRandomBuffer(4096, 1);
 		assert (testWrite(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 3.1: FAIL";
 		assert (testRead(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 3.2: FAIL";
 
-		// 1 block sync - custom buffer - 1024 bytes
+		// 1 full block  - async
 		buffer = initRandomBuffer(4096, 1);
 		assert (testWrite(dev, chunkid, false, buffer, totalOps, device) == true) : "Test 4.1: FAIL";
 		assert (testRead(dev, chunkid, false, buffer, totalOps, device) == true) : "Test 4.2: FAIL";
-
+		
+		// 2 block sync - 5000 bytes sync
 		buffer = initRandomBuffer(5000, 2);
 		assert (testWrite(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 5.1: FAIL";
 		assert (testRead(dev, chunkid, true, buffer, 1, device) == true) : "Test 5.2: FAIL";
 
+		// 2 block sync - 5000 bytes async
 		buffer = initRandomBuffer(5000, 2);
 		assert (testWrite(dev, chunkid, false, buffer, totalOps, device) == true) : "Test 6.1: FAIL";
 		assert (testRead(dev, chunkid, false, buffer, totalOps, device) == true) : "Test 6.2: FAIL";
 
-		// 2 block sync
+		// 2 full block sync
 		buffer = initRandomBuffer(8192, 2);
 		assert (testWrite(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 7.1: FAIL";
 		assert (testRead(dev, chunkid, true, buffer, totalOps, device) == true) : "Test 7.2: FAIL";
 
-		// 2 block async
+		// 2 full block async
 		buffer = initRandomBuffer(8192, 2);
 		assert (testWrite(dev, chunkid, false, buffer, totalOps, device) == true) : "Test 8.1: FAIL";
 		assert (testRead(dev, chunkid, false, buffer, totalOps, device) == true) : "Test 8.2: FAIL";
+		
+		System.out.println("All tests passed!");
 	}
 
 	/**
@@ -151,6 +173,7 @@ public class TestDriver {
 			//TODO buffer returned from readblock should be 0,0,0
 			read.position(blockCount*4096);
 			correct.position(blockCount*4096);
+			
 			if(!compare(read, correct)){
 				return false;
 			};
@@ -177,8 +200,6 @@ public class TestDriver {
 	}
 
 	private static boolean compare(ByteBuffer read, ByteBuffer correct) {
-		/* record state */
-		
 		/* change to read mode */
 		read.flip();
 		correct.flip();
@@ -188,9 +209,8 @@ public class TestDriver {
 			return true;
 		}
 
-		/* restore buffer state */
-		System.out.println(read);
-		System.out.println(correct);
+		System.err.println(read);
+		System.err.println(correct);
 		return false;
 	}
 }

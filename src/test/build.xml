@@ -4,6 +4,23 @@
     <property name="debuglevel" value="source,lines,vars"/>
     <property name="target" value="1.8"/>
     <property name="source" value="1.8"/>
+	
+	<!-- configurables start -->
+	<!-- number of blocks to preallocate for capisim. it is also used in capitest to determine number of of test ops -->	
+	<property name="blocks" value="10000000"/> <!-- requires ~40GB space in tmpfs -->
+	
+	<!-- path to capisim file. used by simtest and cleansim-->	
+	<property name="file.path" value="/dev/shm/test.txt"/>
+	
+	<!-- number of book-keeping blocks and start block address to clean blocks.  used by simtest and capitest-->	
+	<property name="numOfBlockstoClean" value="128"/>
+	<property name="startblock" value="0"/>
+	
+	<!-- set if you have capi-flash enabled in your system. used by capitest and cleancapi-->	
+	<property name="capi.path" value="/dev/sg0"/> 
+	<property name="capi.libpath" value="/home/bsendir/lib/capiblock/build/jni"/> 
+	<!-- configurables end -->	
+
     <path id="capisimtest.classpath">
         <pathelement location="../../capiblock.jar"/>
     	<pathelement location="bin"/>
@@ -16,24 +33,49 @@
         </javac>
     </target>
 	
-	<!-- number of blocks to use while running the test. -->
-    <target depends="compile" name="sim">
+	<!-- test cases for both capi-flash and capisim -->	
+    <target depends="compile" name="simtest">
         <java classname="test.TestDriver" failonerror="true" fork="yes">
-        	<sysproperty key="capi.test.devices" value="/dev/shm/test.txt"/>
-        	<sysproperty key="capi.capacity.blocks" value="1000"/> 	<!-- number of blocks to use while running the test. -->
+        	<sysproperty key="capi.test.devices" value="${file.path}"/> <!-- colon separated list of devices -->
+        	<sysproperty key="capi.capacity.blocks" value="${blocks}"/> <!-- number of blocks to use while running the test. -->
             <jvmarg line="-ea"/>
             <classpath refid="capisimtest.classpath"/>
         </java>
     </target>
 	
-	<!-- number of blocks to use while running the test. -->
-    <target depends="compile" name="capi">
+    <target depends="compile" name="capitest">
         <java classname="test.TestDriver" failonerror="true" fork="yes">
-        	<sysproperty key="java.library.path" path="/home/bsendir/lib/capiblock/build/jni"/>
-        	<sysproperty key="capi.test.devices" value="/dev/sg0"/>
-        	<sysproperty key="capi.capacity.blocks" value="1000"/> 	<!-- number of blocks to use while running the test. -->
+        	<sysproperty key="java.library.path" path="${capi.libpath}"/> <!-- path to libcapiblock.so -->
+        	<sysproperty key="capi.test.devices" value="${capi.path}"/> <!-- colon separated list of devices -->
+        	<sysproperty key="capi.capacity.blocks" value="${blocks}"/> <!-- number of blocks to use while running the test. -->
             <jvmarg line="-ea"/>
             <classpath refid="capisimtest.classpath"/>
         </java>
     </target>
+	
+	
+	<!-- targets to clean the address space -->	
+    <target depends="compile" name="cleancapi">
+        <java classname="test.CleanBlocks" failonerror="true" fork="yes">
+        	<arg value="${startblock}" /> 
+        	<arg value="${numOfBlockstoClean}" />
+        	<sysproperty key="java.library.path" path="${capi.libpath}"/> <!-- path to libcapiblock.so -->
+        	<sysproperty key="capi.test.devices" value="${capi.path}"/> <!-- colon separated list of devices -->
+        	<sysproperty key="capi.capacity.blocks" value="${blocks}"/> <!-- number of blocks to use while running the test. -->
+            <jvmarg line="-ea"/>
+            <classpath refid="capisimtest.classpath"/>
+        </java>
+    </target>
+	
+    <target depends="compile" name="cleansim">
+    	<java classname="test.CleanBlocks" failonerror="true" fork="yes">
+       		  <arg value="${startblock}" /> 
+        	  <arg value="${numOfBlockstoClean}" />
+    	      <sysproperty key="capi.test.devices" value="${file.path}"/> <!-- colon separated list of devices -->
+    	      <sysproperty key="capi.capacity.blocks" value="${blocks}"/> <!-- number of blocks to use while running the test. -->
+    	      <jvmarg line="-ea"/>
+    	      <classpath refid="capisimtest.classpath"/>
+    	</java>
+    </target>
+	
 </project>

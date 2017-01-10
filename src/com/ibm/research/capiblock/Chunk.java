@@ -10,17 +10,19 @@ public class Chunk implements AutoCloseable {
 	FileChannel inChannel;
 	@SuppressWarnings("unused")
 	private final CapiBlockDevice cblk;
-	private final int chunk_id;
+	final int chunk_id;
+	private String filename;
 
 	Chunk(final CapiBlockDevice cblk, final int chunk_id) {
 		this.cblk = cblk;
 		this.chunk_id = chunk_id;
 	}
 
-	public Chunk(final CapiBlockDevice cblk, final int chunk_id, FileChannel inChannel) {
+	public Chunk(final CapiBlockDevice cblk, final int chunk_id, FileChannel inChannel, String filename) {
 		this.inChannel = inChannel;
 		this.cblk = cblk;
 		this.chunk_id = chunk_id;
+		this.filename = filename;
 	}
 
 	/**
@@ -35,8 +37,7 @@ public class Chunk implements AutoCloseable {
 		buf.rewind();
 		buf.limit((int) nBlocks * 4096);
 		synchronized (inChannel) {
-			// TODO
-			inChannel.write(buf, lba * 4096);
+			inChannel.write(buf, (long) lba * 4096);
 		}
 		return nBlocks;
 	}
@@ -55,8 +56,7 @@ public class Chunk implements AutoCloseable {
 			int oldLimit = buf.limit();
 			buf.limit((int) (nBlocks * 4096));
 			synchronized (inChannel) {
-				// TODO
-				inChannel.read(buf, lba * 4096);
+				inChannel.read(buf, (long) lba * 4096);
 			}
 			buf.limit(oldLimit);
 			buf.rewind();
@@ -108,8 +108,13 @@ public class Chunk implements AutoCloseable {
 	 * 
 	 */
 	public void close() throws IOException {
-		// chunk ids TODO
-		inChannel.close();
+		synchronized (CapiBlockDevice.getInstance()) {
+			CapiBlockDevice.chunkids.remove(chunk_id);
+			if(CapiBlockDevice.chunkids.size()==0){
+				CapiBlockDevice.files.remove(filename);
+				inChannel.close();
+			}
+		}
 	}
 
 	/**
@@ -142,7 +147,7 @@ public class Chunk implements AutoCloseable {
 		return new Stats();
 	}
 
-	//TODO
+	// TODO
 	class Stats {
 		public Stats() {
 		}
