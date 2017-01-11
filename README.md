@@ -19,7 +19,7 @@ Test cases are implemented in src/test and includes a separate build file. **Ple
 
 2. 
 ```
-ant testsim
+ant simtest
 ```
 
 #### Test original capiblock.jar
@@ -28,7 +28,7 @@ ant testsim
 
 3. 
 ```
-ant testcapi
+ant capitest
 ```
 
 ## Utility Functions
