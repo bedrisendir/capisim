@@ -17,8 +17,8 @@
 
 7. enable capi rowcache in cassandra/conf/cassandra.yaml. not sure **row_cache_size_in_mb** defines the size or any value bigger than 0 is ok?
 `row_cache_class_name: org.apache.cassandra.cache.CapiRowCacheProvider`
-row_cache_size_in_mb: 24000 
-``
+`row_cache_size_in_mb: 24000`
+
 
 8. start cassandra. you shoud be able to see a message like below..
 ```
